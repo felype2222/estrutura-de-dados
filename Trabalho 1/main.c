@@ -43,22 +43,43 @@ void RadixSort(int *array, int tamanho) { // Função para ordenar o array usand
 }
 
 int main() {
-    int array[] = {170, 45, 75, 90, 802, 24, 2, 66};
-    int tamanho = sizeof(array) / sizeof(array[0]);
+    int tamanho; // Declara a variável tamanho
+
+    printf("Digite o tamanho do array: ");
+    scanf("%d", &tamanho);
+
+    if (tamanho <=0) { // Valida o tamanho do array
+        printf("Tamanho inválido. O tamanho deve ser um número positivo.\n");
+        return 1;
+    }
+
+    int *array = (int *)malloc(tamanho * sizeof(int)); // Aloca memória para o array
+    if (array == NULL) { // Verifica se a alocação foi bem-sucedida
+        printf("Erro ao alocar memória.\n");
+        return 1;
+    }
+
+    printf("Digite os elementos do array:\n");
+    for (int i = 0; i < tamanho; i++) { // Lê os elementos do array
+        scanf("%d", &array[i]);
+    }
 
     printf("Array original:\n");
-    for (int i = 0; i < tamanho; i++) {
+    for (int i = 0; i < tamanho; i++) { // Imprime o array original
         printf("%d ", array[i]);
     }
+
     printf("\n");
 
     RadixSort(array, tamanho); // Chama a função de ordenação
 
     printf("Array ordenado:\n");
-    for (int i = 0; i < tamanho; i++) {
+    for (int i = 0; i < tamanho; i++) { // Imprime o array ordenado
         printf("%d ", array[i]);
     }
+
     printf("\n");
+    free(array); // Libera a memória alocada
 
     return 0;
 }
