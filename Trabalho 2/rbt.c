@@ -1,16 +1,16 @@
 #include <stdlib.h>
 #include "rbt.h"
 
-// Fun��es auxiliares
-static NoRBT* novoNo(int chave) {
-    NoRBT* no = (NoRBT*) malloc(sizeof(NoRBT));
-    no->chave = chave;
-    no->cor = VERMELHO;
+// Funções auxiliares
+static NoRBT* novoNo(int chave) { // Cria um novo nó
+    NoRBT* no = (NoRBT*) malloc(sizeof(NoRBT)); 
+    no->chave = chave; 
+    no->cor = VERMELHO; 
     no->esq = no->dir = no->pai = NULL;
     return no;
 }
 
-static void rotacaoEsquerda(NoRBT** raiz, NoRBT* x) {
+static void rotacaoEsquerda(NoRBT** raiz, NoRBT* x) { // Rotação à esquerda
     NoRBT* y = x->dir;
     x->dir = y->esq;
     if (y->esq) y->esq->pai = x;
@@ -22,7 +22,7 @@ static void rotacaoEsquerda(NoRBT** raiz, NoRBT* x) {
     x->pai = y;
 }
 
-static void rotacaoDireita(NoRBT** raiz, NoRBT* y) {
+static void rotacaoDireita(NoRBT** raiz, NoRBT* y) { // Rotação à direita
     NoRBT* x = y->esq;
     y->esq = x->dir;
     if (x->dir) x->dir->pai = y;
@@ -34,17 +34,17 @@ static void rotacaoDireita(NoRBT** raiz, NoRBT* y) {
     y->pai = x;
 }
 
-static void corrigirInsercao(NoRBT** raiz, NoRBT* z) {
-    while (z->pai && z->pai->cor == VERMELHO) {
-        if (z->pai == z->pai->pai->esq) {
+static void corrigirInsercao(NoRBT** raiz, NoRBT* z) { // Corrige violações das propriedades da RBT após inserção
+    while (z->pai && z->pai->cor == VERMELHO) { // Enquanto o pai for vermelho
+        if (z->pai == z->pai->pai->esq) { // Se o pai for filho esquerdo
             NoRBT* tio = z->pai->pai->dir;
-            if (tio && tio->cor == VERMELHO) {
+            if (tio && tio->cor == VERMELHO) { // Caso 1: tio vermelho
                 z->pai->cor = PRETO;
                 tio->cor = PRETO;
                 z->pai->pai->cor = VERMELHO;
                 z = z->pai->pai;
-            } else {
-                if (z == z->pai->dir) {
+            } else { // Caso 2 e 3: tio preto
+                if (z == z->pai->dir) { // Caso 2: z é filho direito
                     z = z->pai;
                     rotacaoEsquerda(raiz, z);
                 }
@@ -52,15 +52,15 @@ static void corrigirInsercao(NoRBT** raiz, NoRBT* z) {
                 z->pai->pai->cor = VERMELHO;
                 rotacaoDireita(raiz, z->pai->pai);
             }
-        } else {
+        } else { // Se o pai for filho direito
             NoRBT* tio = z->pai->pai->esq;
             if (tio && tio->cor == VERMELHO) {
                 z->pai->cor = PRETO;
                 tio->cor = PRETO;
                 z->pai->pai->cor = VERMELHO;
                 z = z->pai->pai;
-            } else {
-                if (z == z->pai->esq) {
+            } else { // Caso 2 e 3: tio preto
+                if (z == z->pai->esq) { // Caso 2: z é filho esquerdo
                     z = z->pai;
                     rotacaoDireita(raiz, z);
                 }
@@ -70,44 +70,44 @@ static void corrigirInsercao(NoRBT** raiz, NoRBT* z) {
             }
         }
     }
-    (*raiz)->cor = PRETO;
+    (*raiz)->cor = PRETO; // A raiz deve ser sempre preta
 }
 
-NoRBT* inserirRBT(NoRBT* raiz, int chave) {
+NoRBT* inserirRBT(NoRBT* raiz, int chave) { // Inserção na árvore rubro-negra
     NoRBT* novo = novoNo(chave);
     NoRBT* y = NULL;
     NoRBT* x = raiz;
 
-    while (x != NULL) {
+    while (x != NULL) { // Encontra a posição correta para o novo nó
         y = x;
-        if (chave < x->chave)
+        if (chave < x->chave) // Evita chaves duplicadas
             x = x->esq;
-        else if (chave > x->chave)
+        else if (chave > x->chave) // Evita chaves duplicadas
             x = x->dir;
-        else
-            return raiz; // chaves iguais
+        else // Chave já existe, não insere
+            return raiz; 
     }
 
     novo->pai = y;
-    if (y == NULL)
+    if (y == NULL) // A árvore estava vazia
         raiz = novo;
-    else if (chave < y->chave)
+    else if (chave < y->chave) // Insere como filho esquerdo ou direita
         y->esq = novo;
-    else
+    else // Insere como filho esquerdo ou direita
         y->dir = novo;
 
     corrigirInsercao(&raiz, novo);
-    return raiz;
+    return raiz; 
 }
 
-int buscarRBT(NoRBT* raiz, int chave) {
-    if (raiz == NULL) return 0;
-    if (chave == raiz->chave) return 1;
-    if (chave < raiz->chave) return buscarRBT(raiz->esq, chave);
-    else return buscarRBT(raiz->dir, chave);
+int buscarRBT(NoRBT* raiz, int chave) { // Busca na árvore rubro-negra
+    if (raiz == NULL) return 0; // Não encontrou
+    if (chave == raiz->chave) return 1; // Encontrou
+    if (chave < raiz->chave) return buscarRBT(raiz->esq, chave); // Busca recursivamente na subárvore esquerda ou direita
+    else return buscarRBT(raiz->dir, chave); 
 }
 
-void liberarRBT(NoRBT* raiz) {
+void liberarRBT(NoRBT* raiz) { // Libera a memória da árvore rubro-negra
     if (!raiz) return;
     liberarRBT(raiz->esq);
     liberarRBT(raiz->dir);
