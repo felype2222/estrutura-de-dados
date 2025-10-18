@@ -1,19 +1,29 @@
 #ifndef RBT_H
 #define RBT_H
 
-typedef enum { VERMELHO, PRETO } Cor; // Define as cores dos nós
+// Definições de cores
+#define VERMELHO 1
+#define PRETO 0
 
-typedef struct NoRBT { // Define a estrutura do nó da árvore rubro-negra
+typedef struct NoRBT { // Nó da Árvore Rubro-Negra
     int chave;
-    Cor cor;
+    int cor; // 1 = vermelho, 0 = preto
+    struct NoRBT *pai;
     struct NoRBT *esq;
     struct NoRBT *dir;
-    struct NoRBT *pai;
 } NoRBT;
 
-NoRBT* inserirRBT(NoRBT* raiz, int chave); // Função para inserir um nó na árvore
-int buscarRBT(NoRBT* raiz, int chave); // Função para buscar um nó na árvore
-void liberarRBT(NoRBT* raiz); // Função para liberar a memória da árvore
+typedef struct { // Árvore Rubro-Negra
+    NoRBT *raiz;
+    NoRBT *nil;
+} ArvoreRBT;
+
+// Protótipos de funções
+void inicializarRBT(ArvoreRBT *T);
+void inserirRBT(ArvoreRBT *T, int chave);
+int buscarRBT(ArvoreRBT *T, int chave);
+void liberarRBT(ArvoreRBT *T, NoRBT *n);
 
 #endif
+
 

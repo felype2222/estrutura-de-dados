@@ -4,57 +4,63 @@
 #include "bst.h"
 #include "rbt.h"
 
-int gerarChave() { // Gera uma chave aleatória entre 0 e 99999
+int gerarChave() { // Gera uma chave aleatória
     return rand() % 100000;
 }
 
-int main() { // Função principal para comparar desempenho entre BST e RBT
-    FILE *arquivo = fopen("resultados.txt", "w"); // Abre arquivo para salvar resultados
+int main() {
+    FILE *arquivo = fopen("resultados.txt", "w"); // Abre o arquivo para escrita
     if (!arquivo) {
-        printf("Erro ao criar arquivo de saída.\n");
+        printf("Erro ao criar arquivo.\n");
         return 1;
     }
 
-    srand(time(NULL)); // Inicializa gerador de números aleatórios
-    fprintf(arquivo, "Total de nos\tTempo BST (ms)\tTempo Rubro-Negra (ms)\n"); // Cabeçalho do arquivo
+    srand(time(NULL)); // Inicializa a semente do gerador de números aleatórios
+    fprintf(arquivo, "Total de nos\tTempo BST (ms)\tTempo RBT (ms)\n");
 
-    for (int n = 10000; n <= 100000; n += 10000) { // Testa para diferentes tamanhos de árvore
-        NoBST* raizBST = NULL;
-        NoRBT* raizRBT = NULL;
+    for (int n = 10000; n <= 100000; n += 10000) { // Testa de 10.000 a 100.000 nós
+        // Inicializa árvores
+        ArvoreBST arvBST;
+        inicializarBST(&arvBST);
 
-        for (int i = 0; i < n; i++) { // Insere n nós em ambas as árvores
+        ArvoreRBT arvRBT;
+        inicializarRBT(&arvRBT);
+
+        for (int i = 0; i < n; i++) { // Insere n nós com chaves aleatórias
             int chave = gerarChave();
-            raizBST = inserirBST(raizBST, chave);
-            raizRBT = inserirRBT(raizRBT, chave);
+            arvBST.raiz = inserirBST(arvBST.raiz, chave);
+            inserirRBT(&arvRBT, chave);
         }
 
-        clock_t inicioBST = clock(); // Mede tempo de busca na BST
+        // medir tempo de busca BST
+        clock_t iniBST = clock();
         for (int i = 0; i < n; i++) {
-            int chave = gerarChave();
-            buscarBST(raizBST, chave);
+            buscarBST(arvBST.raiz, gerarChave());
         }
-        clock_t fimBST = clock(); // Mede tempo de busca na RBT
-        double tempoBST = ((double)(fimBST - inicioBST) / CLOCKS_PER_SEC) * 1000.0;
+        clock_t fimBST = clock();
+        double tempoBST = ((double)(fimBST - iniBST) / CLOCKS_PER_SEC) * 1000.0;
 
-        clock_t inicioRBT = clock(); // Mede tempo de busca na RBT
+        // medir tempo de busca RBT
+        clock_t iniRBT = clock();
         for (int i = 0; i < n; i++) {
-            int chave = gerarChave();
-            buscarRBT(raizRBT, chave);
+            buscarRBT(&arvRBT, gerarChave());
         }
-        clock_t fimRBT = clock(); // Finaliza medição de tempo
-        double tempoRBT = ((double)(fimRBT - inicioRBT) / CLOCKS_PER_SEC) * 1000.0;
+        clock_t fimRBT = clock();
+        double tempoRBT = ((double)(fimRBT - iniRBT) / CLOCKS_PER_SEC) * 1000.0;
 
         fprintf(arquivo, "%d\t%.2f\t%.2f\n", n, tempoBST, tempoRBT); // Salva resultados no arquivo
-        printf("n=%d -> BST: %.2f ms | RBT: %.2f ms\n", n, tempoBST, tempoRBT); // Mostra resultados no console
+        printf("n=%d -> BST: %.2f ms | RBT: %.2f ms\n", n, tempoBST, tempoRBT); // Exibe resultados no console
 
-        liberarBST(raizBST);
-        liberarRBT(raizRBT);
+        // Libera memória
+        liberarBST(arvBST.raiz);
+        liberarRBT(&arvRBT, arvRBT.raiz);
+        free(arvRBT.nil);
     }
 
     fclose(arquivo); // Fecha o arquivo
     printf("\nResultados salvos em 'resultados.txt'.\n"); 
-
     return 0;
 }
+
 
 
