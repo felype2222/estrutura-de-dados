@@ -1,131 +1,152 @@
 #include "huffman.h"
 #include <string.h>
 
-// Função auxiliar para limpar o buffer de entrada
+// Limpa o buffer do teclado para evitar erros de leitura com scanf/fgets
 void limparBuffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF) {}
 }
 
+// Pequena função para pausar a tela antes de voltar ao menu
+void pausarTela() {
+    printf("\nPressione [ENTER] para continuar...");
+    limparBuffer();
+    // Um getchar extra pode ser necessario dependendo de como o buffer parou, 
+    // mas o limparBuffer geralmente resolve.
+}
+
+// Exibe o menu formatado
+void mostrarMenu() {
+    printf("\n");
+    printf("==================================================\n");
+    printf("           COMPRESSOR HUFFMAN - v2.0             \n");
+    printf("==================================================\n");
+    printf(" [1] TREINAR IA (Inserir dados no banco)\n");
+    printf(" [2] CODIFICAR  (Texto -> Binario)\n");
+    printf(" [3] DECODIFICAR (Binario -> Texto)\n");
+    printf("--------------------------------------------------\n");
+    printf(" [4] ESTATISTICAS (Tabela e Taxa de Compressao)\n");
+    printf(" [5] RESETAR TUDO (Limpar Memoria)\n");
+    printf(" [6] SAIR\n");
+    printf("==================================================\n");
+    printf(" Escolha uma opcao: ");
+}
+
 int main() {
+    // Variáveis de Estado
+    int frequenciasGlobais[256] = {0}; // Banco de dados persistente
+    HuffmanNode *raiz = NULL;          // Ponteiro para a árvore
+    
+    // Variáveis Auxiliares
     int n = 0;
     char *caracteres = NULL;
     int *freq = NULL;
+    char tabelaCodigos[256][100];
+    char bufferCaminho[100];
     int opcao;
 
-    // Variáveis para a nova funcionalidade de codificação
-    char tabelaCodigos[256][100]; // Tabela lookup: ASCII -> String de bits
-    char bufferCaminho[100];      // Buffer auxiliar para recursão
-
-    printf("=== INICIALIZACAO HUFFMAN ===\n");
-    printf("Quantos caracteres iniciais deseja inserir? ");
-    if (scanf("%d", &n) != 1) n = 0; 
-    limparBuffer();
-
-    if (n > 0) {
-        caracteres = (char *)malloc(n * sizeof(char));
-        freq = (int *)malloc(n * sizeof(int));
-
-        printf("\nDigite cada caractere e sua frequencia:\n");
-        for (int i = 0; i < n; i++) {
-            printf("Caractere %d: ", i + 1);
-            scanf("%c", &caracteres[i]);
-            limparBuffer();
-            
-            printf("Frequencia de '%c': ", caracteres[i]);
-            scanf("%d", &freq[i]);
-            limparBuffer();
-        }
-    }
-
-    // Constrói a árvore inicial
-    HuffmanNode *raiz = NULL;
-    if (n > 0) {
-        raiz = construirHuffman(caracteres, freq, n);
-    }
-
-    int arr[100]; // Buffer antigo para impressão visual da árvore
-    int topo = 0;
-
     do {
-        // Limpa a tabela de códigos para garantir que não haja lixo de memória
-        // ou dados antigos se a árvore mudou
-        for(int k=0; k<256; k++) tabelaCodigos[k][0] = '\0';
-        
-        // Se a árvore existe, gera a tabela de lookup atualizada
-        if (raiz) {
-            gerarTabelaCodigos(raiz, bufferCaminho, 0, tabelaCodigos);
+        mostrarMenu();
+        if (scanf("%d", &opcao) != 1) {
+            opcao = 0; // Evita loop infinito se digitar letra
+            limparBuffer();
+        } else {
+            limparBuffer();
         }
 
-        printf("\n===== MENU HUFFMAN =====\n");
-        printf("1 - Mostrar tabela de codigos\n");
-        printf("2 - Inserir novo caractere (Recalcular arvore)\n");
-        printf("3 - Codificar uma frase\n");
-        printf("4 - Sair\n");
-        printf("Escolha: ");
-        scanf("%d", &opcao);
-        limparBuffer();
-
-        if (opcao == 1) {
-            if (raiz) {
-                printf("\n--- Estrutura da Arvore ---\n");
-                imprimirCodigos(raiz, arr, topo);
-            } else {
-                printf("\nA arvore esta vazia! Insira dados primeiro.\n");
-            }
-        } 
-        else if (opcao == 2) {
-            char novo;
-            int f;
-            printf("Novo caractere: ");
-            scanf("%c", &novo);
-            limparBuffer();
-            printf("Frequencia: ");
-            scanf("%d", &f);
-            limparBuffer();
-
-            // Realoca memória
-            n++;
-            char *tempC = realloc(caracteres, n * sizeof(char));
-            int *tempF = realloc(freq, n * sizeof(int));
-
-            if (!tempC || !tempF) {
-                printf("Erro critico de memoria!\n");
-                break; 
-            }
-            caracteres = tempC;
-            freq = tempF;
-
-            caracteres[n - 1] = novo;
-            freq[n - 1] = f;
-
-            if (raiz) liberarArvore(raiz);
-            raiz = construirHuffman(caracteres, freq, n);
-            printf("\nArvore atualizada com sucesso!\n");
-        }
-        else if (opcao == 3) {
-            if (!raiz) {
-                printf("\nErro: A arvore esta vazia. Crie-a primeiro.\n");
-            } else {
+        switch(opcao) {
+            case 1: { // TREINAR
                 char frase[1024];
-                printf("\nDigite a frase para codificar (use apenas caracteres da arvore): ");
-                
-                // Lê a frase inteira, incluindo espaços
+                printf("\n>>> DIGITE A FRASE PARA TREINAMENTO:\n> ");
                 if (fgets(frase, sizeof(frase), stdin)) {
-                    // Remove a quebra de linha (\n) que o fgets captura
                     frase[strcspn(frase, "\n")] = 0;
+
+                    // Limpeza preventiva da árvore antiga para reconstrução
+                    if (raiz) { liberarArvore(raiz); raiz = NULL; }
+                    if (caracteres) { free(caracteres); caracteres = NULL; }
+                    if (freq) { free(freq); freq = NULL; }
+
+                    // Processamento
+                    atualizarFrequencias(frase, frequenciasGlobais);
+                    gerarVetoresParaHeap(frequenciasGlobais, &caracteres, &freq, &n);
+                    raiz = construirHuffman(caracteres, freq, n);
+
+                    // Gerar tabela atualizada
+                    for(int k=0; k<256; k++) tabelaCodigos[k][0] = '\0';
+                    gerarTabelaCodigos(raiz, bufferCaminho, 0, tabelaCodigos);
+
+                    printf("\n[SUCESSO] Dados computados!\n");
                     codificarFrase(frase, tabelaCodigos);
+                    calcularTaxaCompressao(tabelaCodigos, frequenciasGlobais);
                 }
+                pausarTela();
+                break;
             }
+            case 2: { // CODIFICAR
+                if (!raiz) {
+                    printf("\n[ERRO] O sistema ainda nao foi treinado. Use a Opcao 1.\n");
+                } else {
+                    char frase[1024];
+                    printf("\n>>> DIGITE O TEXTO PARA CODIFICAR:\n> ");
+                    if (fgets(frase, sizeof(frase), stdin)) {
+                        frase[strcspn(frase, "\n")] = 0;
+                        codificarFrase(frase, tabelaCodigos);
+                    }
+                }
+                pausarTela();
+                break;
+            }
+            case 3: { // DECODIFICAR
+                if (!raiz) {
+                    printf("\n[ERRO] Arvore vazia.\n");
+                } else {
+                    char binario[2048];
+                    printf("\n>>> DIGITE O CODIGO BINARIO (ex: 10 0 11):\n> ");
+                    if (fgets(binario, sizeof(binario), stdin)) {
+                        binario[strcspn(binario, "\n")] = 0;
+                        decodificarFrase(raiz, binario);
+                    }
+                }
+                pausarTela();
+                break;
+            }
+            case 4: { // ESTATÍSTICAS
+                if (raiz) {
+                    int arr[100];
+                    printf("\n=== TABELA DE CODIGOS ===\n");
+                    printf("| Caractere | Freq  | Codigo Huffman\n");
+                    printf("|-----------|-------|----------------\n");
+                    imprimirCodigos(raiz, arr, 0);
+                    calcularTaxaCompressao(tabelaCodigos, frequenciasGlobais);
+                } else {
+                    printf("\n[INFO] Nenhum dado processado ainda.\n");
+                }
+                pausarTela();
+                break;
+            }
+            case 5: { // RESET
+                for(int i=0; i<256; i++) frequenciasGlobais[i] = 0;
+                if (raiz) { liberarArvore(raiz); raiz = NULL; }
+                if (caracteres) { free(caracteres); caracteres = NULL; }
+                if (freq) { free(freq); freq = NULL; }
+                printf("\n[INFO] Memoria resetada com sucesso!\n");
+                pausarTela();
+                break;
+            }
+            case 6:
+                printf("\nEncerrando sistema...\n");
+                break;
+            default:
+                printf("\n[ERRO] Opcao invalida!\n");
+                pausarTela();
         }
 
-    } while (opcao != 4);
+    } while (opcao != 6);
 
-    // Limpeza final
+    // Limpeza final de memória ao sair do programa
     if (raiz) liberarArvore(raiz);
     if (caracteres) free(caracteres);
     if (freq) free(freq);
-
-    printf("Saindo...\n");
+    
     return 0;
 }

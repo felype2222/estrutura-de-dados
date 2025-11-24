@@ -1,43 +1,37 @@
 #ifndef HUFFMAN_H
 #define HUFFMAN_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "heap.h"
 
-// Estrutura de nó da árvore de Huffman
+/**
+ * Nó da Árvore de Huffman.
+ * Pode ser um nó folha (tem caractere) ou nó interno (tem caractere '$' e filhos).
+ */
 typedef struct HuffmanNode {
-    char caractere;             // O caractere armazenado (ou '$' para nós internos)
-    int freq;                   // Frequência do caractere
-    struct HuffmanNode *esq;    // Ponteiro para filho esquerdo
-    struct HuffmanNode *dir;    // Ponteiro para filho direito
+    char caractere;             // O caractere (apenas para folhas)
+    int freq;                   // Frequência acumulada
+    struct HuffmanNode *esq;    // Filho Esquerdo (Bit 0)
+    struct HuffmanNode *dir;    // Filho Direito (Bit 1)
 } HuffmanNode;
 
-// Estrutura para a Heap Mínima (Priority Queue)
-typedef struct {
-    HuffmanNode **dados;        // Array de ponteiros para nós
-    int tamanho;                // Tamanho atual da heap
-    int capacidade;             // Capacidade máxima
-} MinHeap;
-
-// Funções de criação e manipulação
+// --- GESTÃO DA ÁRVORE ---
 HuffmanNode *criarNo(char caractere, int freq);
-MinHeap *criarHeap(int capacidade);
-
-// Funções da Heap
-void inserirHeap(MinHeap *h, HuffmanNode *node);
-HuffmanNode *removerMin(MinHeap *h);
-MinHeap *construirHeap(char caracteres[], int freq[], int n);
-
-// Funções principais de Huffman
 HuffmanNode *construirHuffman(char caracteres[], int freq[], int n);
-void imprimirCodigos(HuffmanNode *raiz, int arr[], int topo);
 void liberarArvore(HuffmanNode *raiz);
 
-// --- NOVAS FUNÇÕES PARA CODIFICAÇÃO ---
-// Gera uma tabela (matriz) onde tabela['a'] contém a string "001", etc.
+// --- VISUALIZAÇÃO E TABELAS ---
+void imprimirCodigos(HuffmanNode *raiz, int arr[], int topo);
 void gerarTabelaCodigos(HuffmanNode *raiz, char codigoAtual[], int profundidade, char tabela[256][100]);
 
-// Usa a tabela gerada para traduzir uma frase para binário
+// --- LÓGICA DE DADOS ---
+void atualizarFrequencias(const char *frase, int freqGlobal[256]);
+void gerarVetoresParaHeap(int freqGlobal[256], char **outChars, int **outFreq, int *outN);
+
+// --- CODIFICAÇÃO E DECODIFICAÇÃO ---
 void codificarFrase(const char *frase, char tabela[256][100]);
+void decodificarFrase(HuffmanNode *raiz, const char *binario);
+
+// --- ESTATÍSTICAS ---
+void calcularTaxaCompressao(char tabela[256][100], int freqGlobal[256]);
 
 #endif
