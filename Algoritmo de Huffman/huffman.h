@@ -31,6 +31,13 @@ MinHeap *construirHeap(char caracteres[], int freq[], int n);
 // Funções principais de Huffman
 HuffmanNode *construirHuffman(char caracteres[], int freq[], int n);
 void imprimirCodigos(HuffmanNode *raiz, int arr[], int topo);
-void liberarArvore(HuffmanNode *raiz); // NOVA: Para limpar memória
+void liberarArvore(HuffmanNode *raiz);
+
+// --- NOVAS FUNÇÕES PARA CODIFICAÇÃO ---
+// Gera uma tabela (matriz) onde tabela['a'] contém a string "001", etc.
+void gerarTabelaCodigos(HuffmanNode *raiz, char codigoAtual[], int profundidade, char tabela[256][100]);
+
+// Usa a tabela gerada para traduzir uma frase para binário
+void codificarFrase(const char *frase, char tabela[256][100]);
 
 #endif
